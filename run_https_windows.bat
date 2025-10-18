@@ -4,8 +4,10 @@ REM Windows batch script to set SSL environment variables and start the app with
 
 REM --- 配置区域：根据实际路径修改下面两个值 ---
 setlocal
-set "SSL_CERTFILE=D:\Program Files\OpenSSL-Win64\cert.crt"
-set "SSL_KEYFILE=D:\Program Files\OpenSSL-Win64\private.key"
+REM 使用脚本所在目录下的 cert.crt 和 private.key（脚本根目录）
+set "SCRIPT_DIR=%~dp0"
+set "SSL_CERTFILE=%SCRIPT_DIR%cert.crt"
+set "SSL_KEYFILE=%SCRIPT_DIR%private.key"
 set "PORT=443"
 
 echo --------------------------------------------------
