@@ -2,6 +2,7 @@ import asyncio
 import json
 import logging
 import os
+import ssl
 
 from aiohttp import web
 from aiortc import RTCConfiguration, RTCPeerConnection, RTCSessionDescription
@@ -184,4 +185,23 @@ def run():
     app.router.add_post("/api/offer", offer)
     app.router.add_static("/static/", path=os.path.join(ROOT, "static"), name="static")
 
-    web.run_app(app, host="0.0.0.0", port=PORT)
+    # 支持可选的 HTTPS：通过环境变量提供证书路径和私钥路径
+    # 设置方法（示例）：
+    #   set SSL_CERTFILE=path\to\fullchain.pem
+    #   set SSL_KEYFILE=path\to\privkey.pem
+    ssl_certfile = os.getenv("SSL_CERTFILE") or os.getenv("CERTFILE")
+    ssl_keyfile = os.getenv("SSL_KEYFILE") or os.getenv("KEYFILE")
+
+    ssl_context = None
+    if ssl_certfile and ssl_keyfile:
+        try:
+            ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+            ssl_context.load_cert_chain(ssl_certfile, ssl_keyfile)
+            logger.info("Starting server with HTTPS (cert=%s)", ssl_certfile)
+        except Exception as e:
+            logger.exception("Failed to load SSL cert/key: %s", e)
+            ssl_context = None
+    else:
+        logger.info("Starting server without HTTPS")
+
+    web.run_app(app, host="0.0.0.0", port=PORT, ssl_context=ssl_context)
